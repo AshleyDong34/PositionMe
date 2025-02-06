@@ -14,6 +14,8 @@ import android.provider.Settings;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
+import android.os.Environment;
+ 
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -255,7 +257,7 @@ public class MainActivity extends AppCompatActivity implements Observer {
         }
         else{
             // Check other permissions if present
-            askStoragePermission();
+            askMotionPermissions();
         }
     }
 
@@ -268,26 +270,40 @@ public class MainActivity extends AppCompatActivity implements Observer {
      * @see MainActivity#onRequestPermissionsResult(int, String[], int[]) handling request responses.
      */
     private void askStoragePermission() {
-        // Check for storage permission
-        int writeStoragePermission = ActivityCompat.checkSelfPermission(this,
-                Manifest.permission.WRITE_EXTERNAL_STORAGE);
-        int readStoragePermission = ActivityCompat.checkSelfPermission(this,
-                Manifest.permission.READ_EXTERNAL_STORAGE);
-        // Request if not present
-        if(writeStoragePermission != PackageManager.PERMISSION_GRANTED ||
-                readStoragePermission != PackageManager.PERMISSION_GRANTED) {
-            this.requestPermissions(
-                    new String[]{
-                            Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                            Manifest.permission.READ_EXTERNAL_STORAGE},
-                    REQUEST_ID_READ_WRITE_PERMISSION
-            );
-        }
-        else {
-            // Check other permissions if present
-            askMotionPermissions();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            // For Android 11+ use the "Manage External Storage" permission
+            if (!Environment.isExternalStorageManager()) {
+                try {
+                    Intent intent = new Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
+                    intent.setData(Uri.parse("package:" + getPackageName()));
+                    startActivityForResult(intent, REQUEST_ID_READ_WRITE_PERMISSION);
+                } catch (Exception e) {
+                    // Fallback if needed
+                    Intent intent = new Intent();
+                    intent.setAction(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
+                    startActivityForResult(intent, REQUEST_ID_READ_WRITE_PERMISSION);
+                }
+            } else {
+                askMotionPermissions();
+            }
+        } else {
+            // For Android 10 and below, request the normal read/write permissions
+            int writeStoragePermission = ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
+            int readStoragePermission = ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE);
+            if (writeStoragePermission != PackageManager.PERMISSION_GRANTED ||
+                    readStoragePermission != PackageManager.PERMISSION_GRANTED) {
+                this.requestPermissions(
+                        new String[]{
+                                Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                                Manifest.permission.READ_EXTERNAL_STORAGE},
+                        REQUEST_ID_READ_WRITE_PERMISSION
+                );
+            } else {
+                askMotionPermissions();
+            }
         }
     }
+
 
     /**
      * Checks for motion activity permissions.
@@ -581,4 +597,18 @@ public class MainActivity extends AppCompatActivity implements Observer {
     };
 
     //endregion
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_ID_READ_WRITE_PERMISSION && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            if (Environment.isExternalStorageManager()) {
+                Toast.makeText(this, "Storage permission granted!", Toast.LENGTH_SHORT).show();
+                askMotionPermissions();
+            } else {
+                Toast.makeText(this, "Storage permission denied!", Toast.LENGTH_SHORT).show();
+                // Optionally, you can prompt the user again or handle the denial.
+            }
+        }
+    }
+
 }

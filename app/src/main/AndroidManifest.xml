@@ -5,9 +5,10 @@
     <uses-feature android:name="android.hardware.sensor.stepdetector" android:required="true"/>
     <uses-feature android:name="android.hardware.sensor.accelerometer" android:required="true"/>
     <uses-feature android:name="android.hardware.sensor.gyroscope" android:required="true"/>
-    <!-- Wake  -->
+
+    <!-- Wake Lock -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
-    <!-- Activity -->
+    <!-- Activity Recognition -->
     <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION"/>
     <!-- WiFi -->
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
@@ -17,9 +18,11 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.INTERNET"/>
-    <!-- Storage -->
+    <!-- Storage (for Android 10 and below) -->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <!-- Storage Management (for Android 11 and above) -->
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
 
     <application
         android:allowBackup="true"
@@ -38,7 +41,6 @@
             android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
