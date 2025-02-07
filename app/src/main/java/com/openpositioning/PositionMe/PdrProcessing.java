@@ -222,17 +222,21 @@ public class PdrProcessing {
      */
     private float weibergMinMax(List<Double> accelMagnitude) {
         //handling the case when the list accelMagnitude is empty:
-        if (accelMagnitude == null || accelMagnitude.isEmpty()) {
-            Log.w("weibergMinMax", "accelMagnitude list is empty; hence returning default value (0)");
+        try{
+            double maxAccel = Collections.max(accelMagnitude);
+            double minAccel = Collections.min(accelMagnitude);
+            float bounce = (float) Math.pow((maxAccel-minAccel), 0.25);
+            if(this.settings.getBoolean("overwrite_constants", false)) {
+                return bounce * Float.parseFloat(settings.getString("weiberg_k", "0.934")) * 2;
+            }
+            return bounce*K*2;
+        } catch (Exception e) {
+            // Logging the error for debugging purposes
+            Log.e("weibergMinMax", "Error calculating min/max: " + e.getMessage(), e);
+            // Return a default value if an exception occurs
             return 0f;
         }
-        double maxAccel = Collections.max(accelMagnitude);
-        double minAccel = Collections.min(accelMagnitude);
-        float bounce = (float) Math.pow((maxAccel-minAccel), 0.25);
-        if(this.settings.getBoolean("overwrite_constants", false)) {
-            return bounce * Float.parseFloat(settings.getString("weiberg_k", "0.934")) * 2;
-        }
-        return bounce*K*2;
+
     }
 
     /**
